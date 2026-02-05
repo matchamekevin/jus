@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Grille Produits 4x4 - Exemple</title>
+  <style>
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 12px;
+    }
+    .product-card {
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      display:flex;
+      flex-direction:column;
+    }
+    .product-img{height:160px;background-size:cover;background-position:center}
+    .product-body{padding:12px}
+    .product-body h3{margin:0 0 8px;font-size:1.05rem}
+    .product-desc{margin:0 0 10px;color:#666;font-size:0.9rem}
+    .variants{display:flex;flex-wrap:wrap;gap:8px}
+    .variant-btn{padding:6px 10px;border-radius:18px;border:1px solid #4caf50;background:#fff;color:#4caf50;cursor:pointer}
+
+    @media (max-width: 1200px){ .products-grid{grid-template-columns:repeat(3,1fr);} }
+    @media (max-width: 900px){ .products-grid{grid-template-columns:repeat(2,1fr);} }
+    @media (max-width: 480px){ .products-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <div class="products-grid">
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/citron.jpg')"></div>
+      <div class="product-body">
+        <h3>Tamarin</h3>
+        <p class="product-desc">Jus de tamarin acidulé et rafraîchissant. Recette traditionnelle.</p>
+        <div class="variants"><button class="variant-btn">33 cl · 800 F</button><button class="variant-btn">50 cl · 1 200 F</button></div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/bissap.jpg')"></div>
+      <div class="product-body">
+        <h3>Milo</h3>
+        <p class="product-desc">Boisson chocolatée énergisante au Milo. Préférée des togolais !</p>
+        <div class="variants"><button class="variant-btn">33 cl · 1 000 F</button><button class="variant-btn">50 cl · 1 500 F</button></div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/yaourt.jpg')"></div>
+      <div class="product-body">
+        <h3>Yaourt</h3>
+        <p class="product-desc">Yaourt à boire onctueux et frais, saveur nature ou vanille.</p>
+        <div class="variants"><button class="variant-btn">25 cl · 600 F</button><button class="variant-btn">50 cl · 1 000 F</button></div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/bissap3.jpg')"></div>
+      <div class="product-body">
+        <h3>Sodja</h3>
+        <p class="product-desc">Boisson au soja local, riche en protéines. Délicieuse et nutritive.</p>
+        <div class="variants"><button class="variant-btn">33 cl · 800 F</button><button class="variant-btn">50 cl · 1 200 F</button></div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/baobab.jpg')"></div>
+      <div class="product-body">
+        <h3>Ananas</h3>
+        <p class="product-desc">Jus d'ananas frais et sucré, 100% naturel du Togo.</p>
+        <div class="variants"><button class="variant-btn">33 cl · 900 F</button><button class="variant-btn">50 cl · 1 300 F</button><button class="variant-btn">1 L · 2 200 F</button></div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/citron.jpg')"></div>
+      <div class="product-body">
+        <h3>Citron</h3>
+        <p class="product-desc">Jus de citron local pressé, naturel et vitaminé. Idéal pour se rafraîchir.</p>
+        <div class="variants"><button class="variant-btn">33 cl · 700 F</button><button class="variant-btn">50 cl · 1 000 F</button><button class="variant-btn">1 L · 1 800 F</button></div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/bissap2.jpg')"></div>
+      <div class="product-body">
+        <h3>Alangba</h3>
+        <p class="product-desc">Jus de gingembre épicé et revigorant. Parfait pour la digestion et l'énergie.</p>
+        <div class="variants"><button class="variant-btn">33 cl · 1 000 F</button><button class="variant-btn">50 cl · 1 500 F</button></div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img" style="background-image:url('/images/products/bissap.jpg')"></div>
+      <div class="product-body">
+        <h3>Bissap</h3>
+        <p class="product-desc">Jus d'hibiscus rouge, frais et désaltérant. Boisson traditionnelle togolaise très appréciée.</p>
+        <div class="variants"><button class="variant-btn">33 cl · 800 F</button><button class="variant-btn">50 cl · 1 200 F</button><button class="variant-btn">1 L · 2 000 F</button></div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
