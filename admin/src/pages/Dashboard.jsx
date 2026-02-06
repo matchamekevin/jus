@@ -26,7 +26,7 @@ import {
 } from 'react-icons/fi';
 
 const API = "/api";
-const ADMIN_KEY = "admin_key_2026_jus_togo_secure";
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY || "admin_key_2026_jus_togo_secure";
 
 export default function Dashboard() {
   const navigate = useNavigate();

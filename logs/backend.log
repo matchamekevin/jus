@@ -753,3 +753,11 @@ Jus API running on :4000 [DEV]
 [0mGET /uploads/1770387763529-99602.jpeg [36m304[0m 4.363 ms - -[0m
 Restarting 'src/server.js'
 Jus API running on :4000 [DEV]
+Restarting 'src/server.js'
+Jus API running on :4000 [DEV]
+[0mGET /api/admin/orders [36m304[0m 198.900 ms - -[0m
+[0mGET /api/deliveries [36m304[0m 140.449 ms - -[0m
+[0mGET /api/admin/users [36m304[0m 179.011 ms - -[0m
+[0mGET /api/admin/dashboard [36m304[0m 266.360 ms - -[0m
+[0mGET /api/admin/products [36m304[0m 254.293 ms - -[0m
+[0mGET /api/events [32m200[0m 0.634 ms - -[0m
