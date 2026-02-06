@@ -1013,70 +1013,63 @@ img {
   }
   
   .products {
-    padding: 40px 16px;
+    padding: 30px 12px;
   }
   
   .products-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
-  /* Mobile : carte produit horizontale (image à gauche, contenu à droite) */
-  .product-card {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-  }
-
+  /* Mobile : cartes verticales compactes en grille 2 colonnes */
   .product-card:hover {
     transform: none;
   }
 
   .product-img {
-    width: 110px;
-    min-width: 110px;
-    height: auto;
-    min-height: 120px;
-    border-radius: var(--radius) 0 0 var(--radius);
+    height: 120px;
   }
 
   .product-body {
-    padding: 12px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    padding: 10px;
   }
 
   .product-body h3 {
-    font-size: 15px;
+    font-size: 14px;
     margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .product-desc {
-    font-size: 12px !important;
+    font-size: 11px !important;
     margin-bottom: 8px !important;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
   }
 
   .variants {
-    gap: 6px;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .variant-btn {
-    padding: 5px 10px;
+    padding: 5px 8px;
     font-size: 11px;
     border-radius: 6px;
+    width: 100%;
+    text-align: center;
   }
 
   .added-overlay {
     position: absolute;
-    right: 8px;
-    top: 8px;
+    right: 6px;
+    top: 6px;
+    font-size: 12px;
   }
   
   .cart-panel {
@@ -1084,11 +1077,14 @@ img {
   }
 }
 
-/* Très petit écran */
+/* Très petit écran (≤ 380px) */
 @media (max-width: 380px) {
+  .products-grid {
+    gap: 8px;
+  }
+
   .product-img {
-    width: 90px;
-    min-width: 90px;
+    height: 100px;
   }
 
   .product-body {
@@ -1096,17 +1092,17 @@ img {
   }
 
   .product-body h3 {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .product-desc {
     -webkit-line-clamp: 1;
-    font-size: 11px !important;
+    font-size: 10px !important;
     margin-bottom: 6px !important;
   }
 
   .variant-btn {
-    padding: 4px 8px;
+    padding: 4px 6px;
     font-size: 10px;
   }
 }
