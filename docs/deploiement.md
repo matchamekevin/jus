@@ -51,9 +51,19 @@ Utilisateur
 |----------|--------|
 | `NODE_ENV` | `production` |
 | `PORT` | `4000` |
-| `DATABASE_URL` | *(fournie automatiquement par Render si Blueprint utilisé)* |
-| `ADMIN_API_KEY` | *(généré automatiquement ou `openssl rand -hex 32`)* |
+| `DATABASE_URL` | `postgresql://jus_user:CM7OIBrH9CQBX5EwPLRuRquOIfSFCBIV@dpg-d634396r433s73cnpo50-a.oregon-postgres.render.com/jus_db` |
+| `ADMIN_API_KEY` | `admin_key_2026_jus_togo_secure` |
 | `ALLOWED_ORIGINS` | `https://frontend-sooty-one-op41x7nji3.vercel.app,https://admin-chi-swart.vercel.app` |
+
+⚠️ **Important** : La clé `ADMIN_API_KEY` sur Render **doit** correspondre à celle utilisée par l'admin frontend (`VITE_ADMIN_KEY` dans `admin/.env`). Si elles ne matchent pas → erreur `401 Unauthorized` sur toutes les requêtes admin.
+
+---
+
+## Variables d'environnement Vercel (Admin)
+
+L'admin lit la clé API depuis `VITE_ADMIN_KEY`. Deux options :
+1. Le fichier `admin/.env` (déjà configuré, inclus au build local)
+2. Sur Vercel : Dashboard → Projet Admin → Settings → Environment Variables → ajouter `VITE_ADMIN_KEY` = `admin_key_2026_jus_togo_secure`
 
 ---
 
