@@ -5,15 +5,15 @@
   "rewrites": [
     {
       "source": "/api/events",
-      "destination": "https://VOTRE-APP.onrender.com/api/events"
+      "destination": "https://justogo-api.onrender.com/api/events"
     },
     {
       "source": "/api/:path*",
-      "destination": "https://VOTRE-APP.onrender.com/api/:path*"
+      "destination": "https://justogo-api.onrender.com/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://VOTRE-APP.onrender.com/uploads/:path*"
+      "destination": "https://justogo-api.onrender.com/uploads/:path*"
     },
     {
       "source": "/(.*)",

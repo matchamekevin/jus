@@ -7,12 +7,12 @@ import { pool } from "../db/pool.js";
 export const authRouter = Router();
 
 // ============================================================
-// Helper : générer un fingerprint à partir du User-Agent + IP
+// Helper : générer un fingerprint à partir du User-Agent
+// (pas d'IP : instable derrière les proxys Vercel/Render)
 // ============================================================
 function makeFingerprint(req) {
   const ua = req.headers['user-agent'] || '';
-  const ip = req.ip || req.connection?.remoteAddress || '';
-  return crypto.createHash('sha256').update(`${ua}|${ip}`).digest('hex').slice(0, 32);
+  return crypto.createHash('sha256').update(ua).digest('hex').slice(0, 32);
 }
 
 // ============================================================

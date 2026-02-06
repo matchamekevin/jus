@@ -1,19 +1,30 @@
 # JusTogo — Déploiement Vercel + Render (Free Tier)
 
+## URLs de production
+
+| Service | URL | Plateforme |
+|---------|-----|------------|
+| **Frontend** | https://frontend-sooty-one-op41x7nji3.vercel.app | Vercel |
+| **Admin** | https://admin-chi-swart.vercel.app | Vercel |
+| **Backend API** | https://justogo-api.onrender.com | Render |
+| **Health check** | https://justogo-api.onrender.com/api/health | Render |
+
+---
+
 ## Architecture
 
 ```
 Utilisateur
    │
-   ├── justogo.vercel.app ──────► Vercel (Frontend React)
+   ├── frontend-sooty-one-op41x7nji3.vercel.app ► Vercel (Frontend React)
    │        │ rewrites /api/*
    │        ▼
-   │   justogo-api.onrender.com ► Render (Backend Express)
-   │        │                          │
-   │        ▼                          ▼
-   │   PostgreSQL (Render)        /uploads (Render)
+   │   justogo-api.onrender.com ──────────────► Render (Backend Express)
+   │        │                                        │
+   │        ▼                                        ▼
+   │   PostgreSQL (Render)                     /uploads (Render)
    │
-   └── justogo-admin.vercel.app ► Vercel (Admin React)
+   └── admin-chi-swart.vercel.app ────────────► Vercel (Admin React)
             │ rewrites /api/*
             ▼
        justogo-api.onrender.com
@@ -24,53 +35,55 @@ Utilisateur
 
 ---
 
-## Prérequis
+## Identifiants Vercel
 
-- Compte [Vercel](https://vercel.com) (gratuit)
-- Compte [Render](https://render.com) (gratuit)
-- Repo Git (GitHub recommandé)
+- **Compte** : zeks-projects-191b2943
+- **Projet Frontend** : `frontend` → https://vercel.com/zeks-projects-191b2943/frontend
+- **Projet Admin** : `admin` → https://vercel.com/zeks-projects-191b2943/admin
 
 ---
 
-## Étape 1 — Déployer le backend sur Render
+## Variables d'environnement Render
 
-### Option A : Blueprint automatique
-
-1. Aller sur https://dashboard.render.com/blueprints
-2. Connecter le repo GitHub
-3. Render détecte `render.yaml` et crée :
-   - **Web Service** `justogo-api` (Node.js, dossier `backend/`)
-   - **PostgreSQL** `justogo-db`
-4. Copier l'URL du service : `https://justogo-api-xxxx.onrender.com`
-
-### Option B : Manuel
-
-1. **PostgreSQL** : Dashboard → New → PostgreSQL
-   - Name : `justogo-db`
-   - Database : `jus_db`
-   - User : `jus_user`
-   - Plan : Free
-   - → Copier la **Internal Database URL**
-
-2. **Web Service** : Dashboard → New → Web Service
-   - Connecter le repo
-   - Root Directory : `backend`
-   - Build Command : `npm install`
-   - Start Command : `node src/server.js`
-   - Plan : Free
-   - Variables d'environnement :
+À configurer sur Render → Service `justogo-api` → Environment :
 
 | Variable | Valeur |
 |----------|--------|
 | `NODE_ENV` | `production` |
 | `PORT` | `4000` |
-| `DATABASE_URL` | *(Internal Database URL de l'étape 1)* |
-| `ADMIN_API_KEY` | *(générer avec `openssl rand -hex 32`)* |
-| `ALLOWED_ORIGINS` | `https://justogo.vercel.app,https://justogo-admin.vercel.app` |
+| `DATABASE_URL` | *(fournie automatiquement par Render si Blueprint utilisé)* |
+| `ADMIN_API_KEY` | *(généré automatiquement ou `openssl rand -hex 32`)* |
+| `ALLOWED_ORIGINS` | `https://frontend-sooty-one-op41x7nji3.vercel.app,https://admin-chi-swart.vercel.app` |
 
-3. Vérifier : `https://justogo-api-xxxx.onrender.com/api/health` → `{"status":"ok"}`
+---
 
-### Exécuter les migrations
+## Commandes de déploiement
+
+### Redéployer le frontend
+```bash
+cd frontend && vercel --prod --yes
+```
+
+### Redéployer l'admin
+```bash
+cd admin && vercel --prod --yes
+```
+
+### Redéployer le backend
+Push sur GitHub → Render redéploie automatiquement.
+Ou manuellement : Dashboard Render → Service → Manual Deploy.
+
+### Tout redéployer
+```bash
+git add -A && git commit -m "update" && git push
+# Render redéploie auto, puis :
+cd frontend && vercel --prod --yes
+cd ../admin && vercel --prod --yes
+```
+
+---
+
+## Migrations base de données
 
 Dans le shell Render (Dashboard → Service → Shell) :
 ```bash
@@ -79,44 +92,12 @@ node scripts/migrate_db.js
 
 ---
 
-## Étape 2 — Déployer le frontend sur Vercel
-
-1. Aller sur https://vercel.com/new
-2. Importer le repo GitHub
-3. **Root Directory** : `frontend`
-4. Framework : Vite (auto-détecté)
-5. Avant de déployer, éditer `frontend/vercel.json` :
-   - Remplacer `https://VOTRE-APP.onrender.com` par l'URL réelle du backend Render
-
-```json
-{
-  "rewrites": [
-    { "source": "/api/events", "destination": "https://justogo-api-xxxx.onrender.com/api/events" },
-    { "source": "/api/:path*", "destination": "https://justogo-api-xxxx.onrender.com/api/:path*" },
-    { "source": "/uploads/:path*", "destination": "https://justogo-api-xxxx.onrender.com/uploads/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
-```
-
-6. Déployer → le site est live sur `https://justogo.vercel.app`
-
----
-
-## Étape 3 — Déployer l'admin sur Vercel
-
-1. Vercel → New Project → même repo
-2. **Root Directory** : `admin`
-3. Même chose : éditer `admin/vercel.json` avec l'URL Render réelle
-4. Déployer → live sur `https://justogo-admin.vercel.app`
-
----
-
 ## Domaine personnalisé (optionnel)
 
 ### Vercel
-- Dashboard → Project → Settings → Domains → Ajouter `justogo.com`
+- Dashboard → Project → Settings → Domains → Ajouter votre domaine
 - Configurer le DNS : `A` ou `CNAME` selon les instructions Vercel
+- Mettre à jour `ALLOWED_ORIGINS` sur Render avec le nouveau domaine
 
 ---
 
@@ -125,7 +106,7 @@ node scripts/migrate_db.js
 | Service | Limite | Impact |
 |---------|--------|--------|
 | **Render Web Service** | Spin down après 15 min d'inactivité | Premier appel = ~30s de latence (cold start) |
-| **Render PostgreSQL** | Expire après 90 jours | Recréer la DB et migrer (ou passer au plan payant $7/mois) |
+| **Render PostgreSQL** | Expire après 90 jours | Recréer la DB ou passer au plan payant ($7/mois) |
 | **Render Disk** | Pas de disque persistant en free | Les images uploadées sont perdues au redéploiement |
 | **Vercel** | 100 Go bandwidth/mois | Largement suffisant |
 
@@ -136,13 +117,3 @@ Les fichiers uploadés dans `/uploads` sur Render **seront perdus** au redéploi
 1. **Cloudinary** (gratuit 25 Go) — stocker les images produits
 2. **Supabase Storage** (gratuit 1 Go)
 3. **Render Starter** ($7/mois) — inclut un disque persistant
-
----
-
-## Mise à jour
-
-```bash
-git add -A && git commit -m "update" && git push
-```
-
-Les deux plateformes redéploient automatiquement sur push.
