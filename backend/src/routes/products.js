@@ -6,8 +6,8 @@ export const productsRouter = Router();
 productsRouter.get("/", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT p.id AS product_id, p.name, p.description, p.category, p.image_url,
-              v.id AS variant_id, v.size_label, v.price_xof, v.stock
+      `SELECT p.uid AS product_id, p.name, p.description, p.category, p.image_url,
+              v.uid AS variant_id, v.size_label, v.price_xof, v.stock
        FROM products p
        LEFT JOIN product_variants v ON v.product_id = p.id AND v.active = true
        WHERE p.active = true

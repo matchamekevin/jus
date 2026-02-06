@@ -47,8 +47,61 @@ BEGIN
   END IF;
 END $$;
 
+-- ============================================================
+-- MIGRATION UUID : ajouter colonne uid à chaque table
+-- ============================================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+DO $$
+DECLARE
+  tbl TEXT;
+BEGIN
+  FOR tbl IN SELECT unnest(ARRAY['users','products','product_variants','deliveries','orders','order_items','payments','promos'])
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = tbl AND column_name = 'uid'
+    ) THEN
+      EXECUTE format('ALTER TABLE %I ADD COLUMN uid UUID DEFAULT uuid_generate_v4()', tbl);
+      EXECUTE format('UPDATE %I SET uid = uuid_generate_v4() WHERE uid IS NULL', tbl);
+      EXECUTE format('ALTER TABLE %I ALTER COLUMN uid SET NOT NULL', tbl);
+      EXECUTE format('ALTER TABLE %I ALTER COLUMN uid SET DEFAULT uuid_generate_v4()', tbl);
+      EXECUTE format('CREATE UNIQUE INDEX IF NOT EXISTS idx_%I_uid ON %I(uid)', tbl, tbl);
+    END IF;
+  END LOOP;
+END $$;
+
+-- ============================================================
+-- Ajouter fingerprint aux sessions (sécurité anti-vol de token)
+-- ============================================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'sessions' AND column_name = 'fingerprint'
+  ) THEN
+    ALTER TABLE sessions ADD COLUMN fingerprint TEXT;
+  END IF;
+END $$;
+
 -- Remplir les zones de livraison (idempotent suppression/insertion)
 DELETE FROM deliveries;
+
+-- ============================================================
+-- Table panier persistant (lié au compte utilisateur)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS cart_items (
+  id SERIAL PRIMARY KEY,
+  uid UUID NOT NULL DEFAULT uuid_generate_v4(),
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  variant_id INTEGER NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
+  qty INTEGER NOT NULL DEFAULT 1 CHECK (qty > 0),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, variant_id)
+);
+CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cart_items_uid ON cart_items(uid);
 
 INSERT INTO deliveries (zone, fee_xof, active)
 VALUES

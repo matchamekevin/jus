@@ -1,42 +1,87 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
 import { pool } from "../db/pool.js";
 
 export const authRouter = Router();
 
-// Helper: Récupérer les données utilisateur depuis une session DB
-async function getSessionUser(sessionToken) {
+// ============================================================
+// Helper : générer un fingerprint à partir du User-Agent + IP
+// ============================================================
+function makeFingerprint(req) {
+  const ua = req.headers['user-agent'] || '';
+  const ip = req.ip || req.connection?.remoteAddress || '';
+  return crypto.createHash('sha256').update(`${ua}|${ip}`).digest('hex').slice(0, 32);
+}
+
+// ============================================================
+// Helper : Récupérer les données utilisateur depuis une session DB
+// Vérifie aussi le fingerprint si présent
+// ============================================================
+async function getSessionUser(sessionToken, fingerprint) {
   if (!sessionToken) return null;
-  
+
   try {
     const { rows } = await pool.query(
-      `SELECT u.id, u.full_name, u.phone, u.email, u.role, u.created_at
+      `SELECT u.uid, u.full_name, u.phone, u.email, u.role, u.active, u.created_at,
+              s.fingerprint AS session_fp
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.token = $1 AND s.expires_at > NOW()`,
       [sessionToken]
     );
-    return rows.length > 0 ? rows[0] : null;
+    if (rows.length === 0) return null;
+
+    const row = rows[0];
+
+    // Vérifier le fingerprint s'il existe en BD
+    if (row.session_fp && fingerprint && row.session_fp !== fingerprint) {
+      await pool.query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
+      return null;
+    }
+
+    if (row.active === false) return null;
+
+    return {
+      id: row.uid,
+      full_name: row.full_name,
+      phone: row.phone,
+      email: row.email,
+      role: row.role,
+      created_at: row.created_at
+    };
   } catch {
     return null;
   }
 }
 
-// Middleware de vérification de session (DB)
+// ============================================================
+// Middleware de vérification de session (DB + fingerprint)
+// ============================================================
 export async function verifySession(req, res, next) {
   const sessionToken = req.headers['x-session-token'];
-  
-  const user = await getSessionUser(sessionToken);
+  const fingerprint = makeFingerprint(req);
+
+  const user = await getSessionUser(sessionToken, fingerprint);
   if (!user) {
     return res.status(401).json({ error: "Session invalide" });
   }
-  
+
   req.user = user;
+  try {
+    const { rows } = await pool.query("SELECT id FROM users WHERE uid = $1", [user.id]);
+    req.userInternalId = rows[0]?.id;
+  } catch {
+    return res.status(500).json({ error: "Erreur interne" });
+  }
+
   next();
 }
 
+// ============================================================
 // Inscription
+// ============================================================
 authRouter.post("/register", async (req, res, next) => {
   const { full_name, phone, email, password } = req.body || {};
 
@@ -64,24 +109,26 @@ authRouter.post("/register", async (req, res, next) => {
     const { rows } = await pool.query(
       `INSERT INTO users (full_name, phone, email, password_hash, role)
        VALUES ($1, $2, $3, $4, 'client')
-       RETURNING id, full_name, phone, email, role, created_at`,
+       RETURNING id, uid, full_name, phone, email, role, created_at`,
       [full_name.trim(), phone.trim(), email?.trim() || null, password_hash]
     );
 
     const user = rows[0];
-    
-    // Créer une session dans la DB
+
+    // Ne PAS supprimer les sessions existantes — on autorise les sessions multiples
+
     const sessionToken = uuidv4();
+    const fingerprint = makeFingerprint(req);
     await pool.query(
-      `INSERT INTO sessions (token, user_id, expires_at)
-       VALUES ($1, $2, NOW() + INTERVAL '30 days')`,
-      [sessionToken, user.id]
+      `INSERT INTO sessions (token, user_id, fingerprint, expires_at)
+       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days')`,
+      [sessionToken, user.id, fingerprint]
     );
 
-    res.json({ 
+    res.json({
       sessionToken,
       user: {
-        id: user.id,
+        id: user.uid,
         full_name: user.full_name,
         phone: user.phone,
         email: user.email,
@@ -94,7 +141,9 @@ authRouter.post("/register", async (req, res, next) => {
   }
 });
 
+// ============================================================
 // Connexion
+// ============================================================
 authRouter.post("/login", async (req, res, next) => {
   const { phone, password } = req.body || {};
 
@@ -104,7 +153,7 @@ authRouter.post("/login", async (req, res, next) => {
 
   try {
     const { rows } = await pool.query(
-      "SELECT * FROM users WHERE phone = $1",
+      "SELECT id, uid, full_name, phone, email, role, password_hash, active FROM users WHERE phone = $1",
       [phone.trim()]
     );
 
@@ -113,12 +162,11 @@ authRouter.post("/login", async (req, res, next) => {
     }
 
     const user = rows[0];
-    
+
     if (!user.password_hash) {
       return res.status(401).json({ error: "Compte invalide" });
     }
 
-    // Vérifier si le compte est suspendu
     if (user.active === false) {
       return res.status(403).json({ error: "Votre compte a été suspendu. Contactez l'administration." });
     }
@@ -128,23 +176,24 @@ authRouter.post("/login", async (req, res, next) => {
       return res.status(401).json({ error: "Identifiants incorrects" });
     }
 
-    // Créer une session dans la DB
+    // Ne PAS supprimer les sessions existantes — on autorise les sessions multiples
+
     const sessionToken = uuidv4();
+    const fingerprint = makeFingerprint(req);
     await pool.query(
-      `INSERT INTO sessions (token, user_id, expires_at)
-       VALUES ($1, $2, NOW() + INTERVAL '30 days')`,
-      [sessionToken, user.id]
+      `INSERT INTO sessions (token, user_id, fingerprint, expires_at)
+       VALUES ($1, $2, $3, NOW() + INTERVAL '30 days')`,
+      [sessionToken, user.id, fingerprint]
     );
 
     res.json({
       sessionToken,
       user: {
-        id: user.id,
+        id: user.uid,
         full_name: user.full_name,
         phone: user.phone,
         email: user.email,
-        role: user.role,
-        created_at: user.created_at
+        role: user.role
       }
     });
   } catch (err) {
@@ -152,65 +201,64 @@ authRouter.post("/login", async (req, res, next) => {
   }
 });
 
+// ============================================================
 // Déconnexion
+// ============================================================
 authRouter.post("/logout", async (req, res) => {
   const sessionToken = req.headers['x-session-token'];
-  
+
   if (sessionToken) {
     try {
+      // Supprimer UNIQUEMENT la session courante, pas toutes les sessions de l'utilisateur
       await pool.query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
-    } catch {
-      // Ignorer les erreurs
-    }
+    } catch { /* ignore */ }
   }
-  
+
   res.json({ success: true });
 });
 
-// Vérifier la session
+// ============================================================
+// Vérifier la session (au chargement de page)
+// ============================================================
 authRouter.get("/verify", async (req, res) => {
   const sessionToken = req.headers['x-session-token'];
-  
-  const user = await getSessionUser(sessionToken);
+  const fingerprint = makeFingerprint(req);
+
+  const user = await getSessionUser(sessionToken, fingerprint);
   if (!user) {
     return res.status(401).json({ valid: false });
   }
-  
+
   res.json({ valid: true, user });
 });
 
-// Récupérer le profil
-authRouter.get("/profile/:id", async (req, res, next) => {
-  const { id } = req.params;
-
-  try {
-    const { rows } = await pool.query(
-      "SELECT id, full_name, phone, email, role, created_at FROM users WHERE id = $1",
-      [id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Utilisateur introuvable" });
-    }
-
-    res.json({ user: rows[0] });
-  } catch (err) {
-    next(err);
-  }
+// ============================================================
+// Profil (protégé par session — plus besoin de passer l'id dans l'URL)
+// ============================================================
+authRouter.get("/profile", verifySession, async (req, res) => {
+  res.json({ user: req.user });
 });
 
-// Commandes d'un utilisateur
-authRouter.get("/orders/:userId", async (req, res, next) => {
-  const { userId } = req.params;
+// ============================================================
+// Commandes d'un utilisateur (protégé par session, vérifie ownership via UUID)
+// ============================================================
+authRouter.get("/orders/:userUid", verifySession, async (req, res, next) => {
+  const { userUid } = req.params;
+
+  if (req.user.id !== userUid) {
+    return res.status(403).json({ error: "Accès interdit" });
+  }
 
   try {
     const { rows: orders } = await pool.query(
-      `SELECT o.*, d.zone as delivery_zone
+      `SELECT o.uid AS id, o.status, o.total_xof, o.delivery_fee_xof,
+              o.address, o.phone, o.created_at,
+              d.zone AS delivery_zone
        FROM orders o
        LEFT JOIN deliveries d ON d.id = o.delivery_zone_id
        WHERE o.user_id = $1
        ORDER BY o.created_at DESC`,
-      [userId]
+      [req.userInternalId]
     );
 
     res.json({ orders });
@@ -219,7 +267,9 @@ authRouter.get("/orders/:userId", async (req, res, next) => {
   }
 });
 
-// Nettoyage périodique des sessions expirées (à appeler via cron si besoin)
+// ============================================================
+// Nettoyage périodique des sessions expirées
+// ============================================================
 export async function cleanExpiredSessions() {
   try {
     const result = await pool.query("DELETE FROM sessions WHERE expires_at < NOW()");

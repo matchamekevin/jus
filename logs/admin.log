@@ -4,7 +4,58 @@ npm warn Unknown global config "tmp". This will stop working in the next major v
 > vite --port 5174
 
 
-  VITE v5.4.21  ready in 596 ms
+  VITE v5.4.21  ready in 2706 ms
 
   ➜  Local:   http://localhost:5174/
   ➜  Network: use --host to expose
+18:50:40 [vite] hmr update /src/styles.css
+18:51:17 [vite] hmr update /src/pages/Dashboard.jsx
+18:51:19 [vite] hmr update /src/pages/Dashboard.jsx
+18:51:19 [vite] hmr update /src/styles.css
+18:57:28 [vite] hmr update /src/pages/Dashboard.jsx
+18:57:28 [vite] hmr update /src/styles.css
+18:57:47 [vite] hmr update /src/styles.css
+18:58:38 [vite] hmr update /src/pages/Dashboard.jsx
+18:58:38 [vite] hmr update /src/styles.css
+19:06:30 [vite] vite.config.js changed, restarting server...
+✘ [ERROR] Expected ")" but found end of file
+
+    vite.config.js:33:0:
+      33 │ 
+         │ ^
+         ╵ )
+
+failed to load config from /home/kev/jus/admin/vite.config.js
+19:06:30 [vite] Build failed with 1 error:
+vite.config.js:33:0: ERROR: Expected ")" but found end of file
+19:06:30 [vite] server restart failed
+19:06:48 [vite] vite.config.js changed, restarting server...
+✘ [ERROR] Expected ")" but found end of file
+
+    vite.config.js:33:0:
+      33 │ 
+         │ ^
+         ╵ )
+
+failed to load config from /home/kev/jus/admin/vite.config.js
+19:06:48 [vite] Build failed with 1 error:
+vite.config.js:33:0: ERROR: Expected ")" but found end of file
+19:06:48 [vite] server restart failed
+19:11:42 [vite] vite.config.js changed, restarting server...
+19:11:42 [vite] server restarted.
+19:18:24 [vite] vite.config.js changed, restarting server...
+✘ [ERROR] Expected ";" but found ")"
+
+    vite.config.js:30:2:
+      30 │ }))
+         │   ^
+         ╵   ;
+
+failed to load config from /home/kev/jus/admin/vite.config.js
+19:18:24 [vite] Build failed with 1 error:
+vite.config.js:30:2: ERROR: Expected ";" but found ")"
+19:18:24 [vite] server restart failed
+19:18:28 [vite] vite.config.js changed, restarting server...
+19:18:28 [vite] server restarted.
+19:23:24 [vite] vite.config.js changed, restarting server...
+19:23:24 [vite] server restarted.

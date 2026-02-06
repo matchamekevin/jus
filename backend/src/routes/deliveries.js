@@ -6,7 +6,7 @@ export const deliveriesRouter = Router();
 deliveriesRouter.get("/", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      "SELECT id, zone, fee_xof FROM deliveries WHERE active = true ORDER BY id ASC"
+      "SELECT uid AS id, zone, fee_xof FROM deliveries WHERE active = true ORDER BY id ASC"
     );
     res.json({ items: rows });
   } catch (err) {

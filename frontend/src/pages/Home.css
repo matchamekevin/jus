@@ -99,27 +99,7 @@
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
-.hero-visual {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.juice-float {
-  position: absolute;
-  font-size: 3rem;
-  opacity: 0.2;
-  animation: float 4s ease-in-out infinite;
-}
-
-.juice-float:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
-.juice-float:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
-.juice-float:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 2s; }
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
-}
+/* Decorative juice floats removed */
 
 /* Categories - CENTERED */
 .categories-section {
@@ -189,18 +169,36 @@
 }
 
 .see-all {
-  color: #4caf50;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #2e7d32;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: background 0.15s, transform 0.12s, box-shadow 0.12s;
+  white-space: nowrap;
 }
 
 .see-all:hover {
-  text-decoration: underline;
+  background: rgba(76,175,80,0.08);
+  box-shadow: 0 2px 8px rgba(46,125,50,0.08);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.see-all:focus {
+  outline: 3px solid rgba(76,175,80,0.16);
+  outline-offset: 2px;
 }
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr) !important;
   gap: 1.5rem;
 }
 
@@ -241,17 +239,7 @@
   position: relative;
 }
 
-.featured-tag {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: linear-gradient(135deg, #ffc107, #ff9800);
-  color: #fff;
-  padding: 0.25rem 0.75rem;
-  border-radius: 15px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
+/* Featured tag removed (stickers) */
 
 .product-body {
   padding: 1rem;
@@ -440,15 +428,33 @@
   }
 }
 
+@media (max-width: 600px) {
+  .section-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .section-header h2 {
+    text-align: center;
+  }
+
+  .see-all {
+    margin-top: 0.25rem;
+  }
+}
+
+
+/* Keep 4 columns for larger viewports, reduce on smaller screens */
 @media (max-width: 1200px) {
   .products-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
 @media (max-width: 900px) {
   .products-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { FiShoppingCart } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useApp } from '../context/AppContext';
@@ -44,7 +45,7 @@ export default function NosJus() {
     if (selectedProduct && selectedVariant) {
       const success = addToCart(selectedProduct, selectedVariant, 1);
       if (success) {
-        setAddedMessage('Ajouté au panier ! 🎉');
+        setAddedMessage('Ajouté au panier !');
         setTimeout(() => {
           setAddedMessage('');
           setSelectedProduct(null);
@@ -71,7 +72,7 @@ export default function NosJus() {
     return (
       <div className="nosjus-page">
         <Navbar />
-        <div className="loading-state">⏳ Chargement des jus...</div>
+        <div className="loading-state">Chargement des jus...</div>
       </div>
     );
   }
@@ -82,7 +83,7 @@ export default function NosJus() {
 
       <main className="nosjus-main">
         <div className="nosjus-hero">
-          <h1>🍹 Nos Jus Frais</h1>
+          <h1>Nos Jus Frais</h1>
           <p>Découvrez notre sélection de jus 100% naturels</p>
           
           {/* Barre de recherche */}
@@ -90,7 +91,7 @@ export default function NosJus() {
             <input 
               type="text"
               className="search-input"
-              placeholder="🔍 Rechercher un jus..."
+              placeholder="Rechercher un jus..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -112,15 +113,15 @@ export default function NosJus() {
               className={selectedCategory === 'all' ? 'category-btn active' : 'category-btn'}
               onClick={() => setSelectedCategory('all')}
             >
-              🍹 Tous
+              Tous
             </button>
             {categories.map((cat, index) => (
-              <button
+                <button
                 key={`cat-${index}`}
                 className={selectedCategory === cat ? 'category-btn active' : 'category-btn'}
                 onClick={() => setSelectedCategory(cat)}
               >
-                🥤 {cat}
+                {cat}
               </button>
             ))}
           </div>
@@ -130,7 +131,6 @@ export default function NosJus() {
         <div className="products-grid">
           {filteredProducts.length === 0 ? (
             <div className="no-products">
-              <span>🍃</span>
               <p>Aucun jus dans cette catégorie</p>
             </div>
           ) : (
@@ -142,11 +142,10 @@ export default function NosJus() {
               >
                 <div className="product-image">
                   <img 
-                    src={product.image_url || 'https://via.placeholder.com/200x200?text=🥤'} 
+                    src={product.image_url || 'https://via.placeholder.com/200x200?text=Product'} 
                     alt={product.name}
-                    onError={e => { e.target.src = 'https://via.placeholder.com/200x200?text=🥤'; }}
+                    onError={e => { e.target.src = 'https://via.placeholder.com/200x200?text=Product'; }}
                   />
-                  {product.is_featured && <span className="featured-badge">⭐ Populaire</span>}
                 </div>
                 <div className="product-info">
                   <h3>{product.name}</h3>
@@ -168,15 +167,14 @@ export default function NosJus() {
             <button className="modal-close-btn" onClick={closeProductDetail}>✕</button>
             
             {addedMessage ? (
-              <div className="added-success">
-                <span>✅</span>
-                <p>{addedMessage}</p>
-              </div>
-            ) : (
+                  <div className="added-success">
+                    <p>{addedMessage}</p>
+                  </div>
+                ) : (
               <>
                 <div className="modal-product-image">
                   <img 
-                    src={selectedProduct.image_url || 'https://via.placeholder.com/300x300?text=🥤'} 
+                    src={selectedProduct.image_url || 'https://via.placeholder.com/300x300?text=Jus'} 
                     alt={selectedProduct.name}
                   />
                 </div>
@@ -208,7 +206,7 @@ export default function NosJus() {
                     onClick={handleAddToCart}
                     disabled={!selectedVariant}
                   >
-                    🛒 Ajouter au panier
+                    <FiShoppingCart style={{ marginRight: 8 }} /> Ajouter au panier
                   </button>
                 </div>
               </>

@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useApp } from "../context/AppContext";
 import "./Home.css";
+import { FiDroplet, FiTruck, FiStar, FiCreditCard } from 'react-icons/fi';
 
 export default function Home() {
   const {
@@ -59,7 +60,7 @@ export default function Home() {
       {/* Hero */}
       <section className="hero">
         <div className="hero-content">
-          <h1>Jus Frais du Togo 🇹🇬</h1>
+          <h1>Jus Frais du Togo</h1>
           <p>Bissap, Baobab, Gingembre... Des jus 100% naturels livrés chez vous</p>
           {isAuthenticated ? (
             <p className="welcome">Bienvenue, <strong>{user.full_name}</strong> !</p>
@@ -69,13 +70,8 @@ export default function Home() {
             </button>
           )}
           <Link to="/nos-jus" className="cta-btn secondary">
-            Voir tous nos jus 🍹
+            Voir tous nos jus
           </Link>
-        </div>
-        <div className="hero-visual">
-          <div className="juice-float">🥤</div>
-          <div className="juice-float">🍊</div>
-          <div className="juice-float">🍋</div>
         </div>
       </section>
 
@@ -89,7 +85,7 @@ export default function Home() {
                 className={selectedCategory === 'all' ? 'active' : ''}
                 onClick={() => setSelectedCategory('all')}
               >
-                🍹 Tous
+                Tous
               </button>
               {categories.map((cat, index) => (
                 <button
@@ -97,7 +93,7 @@ export default function Home() {
                   className={selectedCategory === cat ? 'active' : ''}
                   onClick={() => setSelectedCategory(cat)}
                 >
-                  🥤 {cat}
+                  {cat}
                 </button>
               ))}
             </div>
@@ -121,7 +117,6 @@ export default function Home() {
             filteredProducts.map((product) => (
               <article key={product.id} className={`product-card ${addedProduct === product.id ? 'added' : ''}`} role="listitem">
                 <figure className="product-img" style={{ backgroundImage: product.image_url ? `url(${product.image_url})` : 'none' }}>
-                  {product.is_featured && <span className="featured-tag">⭐ Top</span>}
                 </figure>
                 <div className="product-body">
                   <h3>{product.name}</h3>
@@ -154,50 +149,29 @@ export default function Home() {
         <h2>Pourquoi JusTogo ?</h2>
         <div className="why-grid">
           <div className="why-card">
-            <span>🍃</span>
+            <FiDroplet />
             <h4>100% Naturel</h4>
             <p>Jus pressés à froid, sans conservateurs ni sucre ajouté</p>
           </div>
           <div className="why-card">
-            <span>🚚</span>
+            <FiTruck />
             <h4>Livraison Rapide</h4>
             <p>Livré chez vous en 30-60 min dans tout Lomé</p>
           </div>
           <div className="why-card">
-            <span>💯</span>
+            <FiStar />
             <h4>Qualité Premium</h4>
             <p>Fruits frais sélectionnés chaque jour au marché</p>
           </div>
           <div className="why-card">
-            <span>💳</span>
+            <FiCreditCard />
             <h4>Paiement Facile</h4>
             <p>Cash à la livraison, Flooz ou T-Money</p>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <h3>🥤 JusTogo</h3>
-            <p>Jus frais, naturels et délicieux</p>
-          </div>
-          <div className="footer-links">
-            <Link to="/">Accueil</Link>
-            <Link to="/nos-jus">Nos Jus</Link>
-            <Link to="/contact">Contact</Link>
-            <Link to="/suivi">Suivi</Link>
-          </div>
-          <div className="footer-contact">
-            <p>📱 <a href="tel:+22896732247">96 73 22 47</a></p>
-            <p>📲 <a href="tel:+22870472436">70 47 24 36</a></p>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2025 JusTogo - Tous droits réservés</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

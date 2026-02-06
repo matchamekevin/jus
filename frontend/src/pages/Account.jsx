@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
+import { FiMapPin } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 const STATUS_LABELS = {
-  pending: { label: 'En attente', icon: '⏳', color: '#f59e0b' },
-  preparing: { label: 'En préparation', icon: '🍹', color: '#3b82f6' },
-  delivering: { label: 'En livraison', icon: '🚴', color: '#8b5cf6' },
-  delivered: { label: 'Livrée', icon: '✅', color: '#22c55e' },
-  cancelled: { label: 'Annulée', icon: '❌', color: '#ef4444' }
+  pending: { label: 'En attente', icon: '', color: '#f59e0b' },
+  preparing: { label: 'En préparation', icon: '', color: '#3b82f6' },
+  delivering: { label: 'En livraison', icon: '', color: '#8b5cf6' },
+  delivered: { label: 'Livrée', icon: '', color: '#22c55e' },
+  cancelled: { label: 'Annulée', icon: '', color: '#ef4444' }
 };
 
 export default function Account() {
-  const { user, isAuthenticated, logout, getUserOrders } = useApp();
+  const { user, isAuthenticated, authReady, logout, getUserOrders } = useApp();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!authReady) return; // Attendre la vérification de session
     if (!isAuthenticated) {
       navigate('/auth');
       return;
@@ -26,14 +28,14 @@ export default function Account() {
       .then(setOrders)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [isAuthenticated, getUserOrders, navigate]);
+  }, [authReady, isAuthenticated, getUserOrders, navigate]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  if (!isAuthenticated) {
+  if (!authReady || !isAuthenticated) {
     return null;
   }
 
@@ -46,14 +48,14 @@ export default function Account() {
 
       <div className="account-content">
         {/* Profil */}
-        <section className="profile-card">
+          <section className="profile-card">
           <div className="profile-avatar">
-            {user.full_name?.charAt(0).toUpperCase() || '👤'}
+            {user.full_name?.charAt(0).toUpperCase() || ''}
           </div>
           <div className="profile-info">
             <h2>{user.full_name}</h2>
-            <p>📞 {user.phone}</p>
-            {user.email && <p>✉️ {user.email}</p>}
+            <p>{user.phone}</p>
+            {user.email && <p>{user.email}</p>}
           </div>
           <button className="btn-logout" onClick={handleLogout}>
             Déconnexion
@@ -68,7 +70,7 @@ export default function Account() {
             <div className="loading">Chargement...</div>
           ) : orders.length === 0 ? (
             <div className="empty-orders">
-              <p>🛒 Aucune commande pour le moment</p>
+              <p>Aucune commande pour le moment</p>
               <Link to="/" className="btn-primary">Commander</Link>
             </div>
           ) : (
@@ -90,10 +92,10 @@ export default function Account() {
                         {status.icon} {status.label}
                       </span>
                     </div>
-                    <div className="order-info">
-                      <p>📍 {order.address}</p>
-                      <p>💰 {(order.total_xof + order.delivery_fee_xof).toLocaleString()} F</p>
-                    </div>
+                        <div className="order-info">
+                          <p><FiMapPin style={{ verticalAlign: 'middle', marginRight: 6 }} />{order.address}</p>
+                          <p>{(order.total_xof + order.delivery_fee_xof).toLocaleString()} F</p>
+                        </div>
                     <div className="order-date">
                       {new Date(order.created_at).toLocaleDateString('fr-FR', {
                         day: 'numeric',

@@ -1,4 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
+import { FiDroplet } from 'react-icons/fi';
+import Footer from './Footer';
 
 function Layout() {
   const location = useLocation();
@@ -11,7 +13,7 @@ function Layout() {
   return (
     <>
       <nav className="header">
-        <a href="/" className="logo">🥤 JusTogo</a>
+        <a href="/" className="logo"><FiDroplet style={{ marginRight: 8 }} />JusTogo</a>
         <div className="nav">
           <a href="/#produits">Nos Jus</a>
           <a href="/track">Suivi</a>
@@ -22,10 +24,7 @@ function Layout() {
         <Outlet />
       </main>
 
-      <footer className="footer">
-        <p>🥤 JusTogo · Jus naturels du Togo</p>
-        <p>© 2026</p>
-      </footer>
+      <Footer />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FiLock } from 'react-icons/fi';
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -27,8 +28,10 @@ export default function Login() {
     <div className="login-page">
       <div className="login-box">
         <div className="login-header">
-          <span className="icon">🔐</span>
-          <h1>JusTogo Admin</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FiLock />
+            <h1 style={{ margin: 0 }}>JusTogo Admin</h1>
+          </div>
           <p>Connectez-vous au back-office</p>
         </div>
 

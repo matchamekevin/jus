@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useApp } from '../context/AppContext';
 import './Modal.css';
 
@@ -59,8 +60,10 @@ export default function AuthModal() {
         <button className="modal-close" onClick={closeModal}>✕</button>
         
         <div className="auth-header">
-          <span className="auth-logo">🥤</span>
-          <h2>{isLogin ? 'Connexion' : 'Inscription'}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FiUser />
+            <h2 style={{ margin: 0 }}>{isLogin ? 'Connexion' : 'Inscription'}</h2>
+          </div>
           <p>{isLogin ? 'Connectez-vous pour commander' : 'Créez votre compte JusTogo'}</p>
         </div>
 
@@ -69,7 +72,7 @@ export default function AuthModal() {
         <form onSubmit={handleSubmit} className="auth-form">
           {!isLogin && (
             <div className="form-group">
-              <label>👤 Nom complet</label>
+              <label>Nom complet</label>
               <input
                 type="text"
                 name="full_name"
@@ -82,7 +85,7 @@ export default function AuthModal() {
           )}
 
           <div className="form-group">
-            <label>📱 Téléphone</label>
+            <label>Téléphone</label>
             <input
               type="tel"
               name="phone"
@@ -95,7 +98,7 @@ export default function AuthModal() {
 
           {!isLogin && (
             <div className="form-group">
-              <label>✉️ Email (optionnel)</label>
+              <label>Email (optionnel)</label>
               <input
                 type="email"
                 name="email"
@@ -107,7 +110,7 @@ export default function AuthModal() {
           )}
 
           <div className="form-group">
-            <label>🔒 Mot de passe</label>
+            <label>Mot de passe</label>
             <div className="password-input-wrapper">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -118,18 +121,20 @@ export default function AuthModal() {
                 required
                 minLength={4}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Cacher le mot de passe' : 'Voir le mot de passe'}
+                title={showPassword ? 'Cacher' : 'Voir'}
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <FiEyeOff aria-hidden /> : <FiEye aria-hidden />}
               </button>
             </div>
           </div>
 
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? '⏳ Chargement...' : (isLogin ? '🚀 Se connecter' : '✨ Créer mon compte')}
+            {loading ? 'Chargement...' : (isLogin ? 'Se connecter' : 'Créer mon compte')}
           </button>
         </form>
 

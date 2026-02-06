@@ -1,0 +1,23 @@
+{
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/events",
+      "destination": "https://VOTRE-APP.onrender.com/api/events"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://VOTRE-APP.onrender.com/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://VOTRE-APP.onrender.com/uploads/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

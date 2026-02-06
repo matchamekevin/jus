@@ -1,7 +1,31 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  FiBarChart2,
+  FiPackage,
+  FiBox,
+  FiTruck,
+  FiUsers,
+  FiLogOut,
+  FiTrash2,
+  FiPlusCircle,
+  FiSearch,
+  FiDollarSign,
+  FiClock,
+  FiCheckCircle,
+  FiMapPin,
+  FiPhone,
+  FiCalendar,
+  FiX,
+  FiEdit2,
+  FiUpload,
+  FiImage,
+  FiTrendingUp,
+  FiShoppingBag,
+  FiXCircle
+} from 'react-icons/fi';
 
-const API = "http://localhost:4000/api";
+const API = "/api";
 const ADMIN_KEY = "admin_key_2026_jus_togo_secure";
 
 export default function Dashboard() {
@@ -15,18 +39,66 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   // Formulaires
-  const [newProduct, setNewProduct] = useState({ name: "", description: "", category: "", image_url: "" });
+  const [newProduct, setNewProduct] = useState({ name: "", description: "", category: "" });
+  const [newProductImage, setNewProductImage] = useState(null);
+  const [newProductPreview, setNewProductPreview] = useState(null);
   const [newVariant, setNewVariant] = useState({ product_id: "", size_label: "50 cl", price_xof: 1200, stock: 50 });
   const [newZone, setNewZone] = useState({ zone: "", fee_xof: 500 });
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editProductImage, setEditProductImage] = useState(null);
+  const [editProductPreview, setEditProductPreview] = useState(null);
+  const [editingVariant, setEditingVariant] = useState(null);
   const [editingZone, setEditingZone] = useState(null);
 
   // Filtres
   const [orderFilter, setOrderFilter] = useState("all");
   const [searchProduct, setSearchProduct] = useState("");
+  const [searchUser, setSearchUser] = useState("");
+  const [userStatusFilter, setUserStatusFilter] = useState("all");
+  const [userRoleFilter, setUserRoleFilter] = useState("all");
 
   useEffect(() => {
     loadData();
+
+    // ---- SSE : mise à jour temps-réel ----
+    let es;
+    let reconnectTimer;
+    let mounted = true;
+
+    function connectSSE() {
+      if (!mounted) return;
+      try {
+        es = new EventSource(`${API}/events`);
+
+        es.onmessage = (event) => {
+          if (!mounted) return;
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'connected') return;
+            if (['products', 'orders', 'zones', 'users', 'dashboard', 'promos'].includes(data.type)) {
+              loadData();
+            }
+          } catch { /* ignore */ }
+        };
+
+        es.onerror = () => {
+          if (es) es.close();
+          if (mounted) {
+            reconnectTimer = setTimeout(connectSSE, 5_000);
+          }
+        };
+      } catch { /* ignore */ }
+    }
+
+    // Délai de 500ms pour laisser loadData finir avant de connecter SSE
+    const initTimer = setTimeout(connectSSE, 500);
+
+    return () => {
+      mounted = false;
+      clearTimeout(initTimer);
+      clearTimeout(reconnectTimer);
+      if (es) es.close();
+    };
   }, []);
 
   async function loadData() {
@@ -36,7 +108,7 @@ export default function Dashboard() {
       const [dashRes, ordersRes, prodsRes, usersRes, zonesRes] = await Promise.all([
         fetch(`${API}/admin/dashboard`, { headers }),
         fetch(`${API}/admin/orders`, { headers }),
-        fetch(`${API}/products`),
+        fetch(`${API}/admin/products`, { headers }),
         fetch(`${API}/admin/users`, { headers }).catch(() => ({ json: () => ({ users: [] }) })),
         fetch(`${API}/deliveries`)
       ]);
@@ -122,14 +194,24 @@ export default function Dashboard() {
   async function createProduct(e) {
     e.preventDefault();
     try {
-      const res = await fetch(`${API}/admin/products`, {
+      const formData = new FormData();
+      formData.append("name", newProduct.name);
+      formData.append("description", newProduct.description);
+      formData.append("category", newProduct.category);
+      if (newProductImage) {
+        formData.append("image", newProductImage);
+      }
+
+      const res = await fetch(`${API}/admin/products/with-image`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-key": ADMIN_KEY },
-        body: JSON.stringify(newProduct)
+        headers: { "x-admin-key": ADMIN_KEY },
+        body: formData
       });
       if (res.ok) {
         alert("✅ Produit créé");
-        setNewProduct({ name: "", description: "", category: "", image_url: "" });
+        setNewProduct({ name: "", description: "", category: "" });
+        setNewProductImage(null);
+        setNewProductPreview(null);
         loadData();
       } else {
         const data = await res.json();
@@ -154,6 +236,44 @@ export default function Dashboard() {
     } catch (err) {
       alert("Erreur: " + err.message);
     }
+  }
+
+  async function saveEditProduct(e) {
+    e.preventDefault();
+    if (!editingProduct) return;
+    try {
+      const formData = new FormData();
+      formData.append("name", editingProduct.name);
+      formData.append("description", editingProduct.description || "");
+      formData.append("category", editingProduct.category || "");
+      if (editProductImage) {
+        formData.append("image", editProductImage);
+      }
+
+      const res = await fetch(`${API}/admin/products/${editingProduct.id}/with-image`, {
+        method: "PATCH",
+        headers: { "x-admin-key": ADMIN_KEY },
+        body: formData
+      });
+      if (res.ok) {
+        alert("✅ Produit mis à jour");
+        setEditingProduct(null);
+        setEditProductImage(null);
+        setEditProductPreview(null);
+        loadData();
+      } else {
+        const data = await res.json();
+        alert("Erreur: " + (data.error || "Échec"));
+      }
+    } catch (err) {
+      alert("Erreur: " + err.message);
+    }
+  }
+
+  function startEditProduct(product) {
+    setEditingProduct({ ...product });
+    setEditProductImage(null);
+    setEditProductPreview(product.image_url || null);
   }
 
   async function deleteProduct(id) {
@@ -182,7 +302,7 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json", "x-admin-key": ADMIN_KEY },
         body: JSON.stringify({
           ...newVariant,
-          product_id: Number(newVariant.product_id),
+          product_id: newVariant.product_id,
           price_xof: Number(newVariant.price_xof),
           stock: Number(newVariant.stock)
         })
@@ -205,6 +325,36 @@ export default function Dashboard() {
         headers: { "x-admin-key": ADMIN_KEY }
       });
       loadData();
+    } catch (err) {
+      alert("Erreur: " + err.message);
+    }
+  }
+
+  function startEditVariant(variant) {
+    setEditingVariant({ ...variant });
+  }
+
+  async function saveEditVariant(e) {
+    e.preventDefault();
+    if (!editingVariant) return;
+    try {
+      const res = await fetch(`${API}/admin/variants/${editingVariant.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-admin-key": ADMIN_KEY },
+        body: JSON.stringify({
+          size_label: editingVariant.size_label,
+          price_xof: Number(editingVariant.price_xof),
+          stock: Number(editingVariant.stock)
+        })
+      });
+      if (res.ok) {
+        alert("✅ Variante mise à jour");
+        setEditingVariant(null);
+        loadData();
+      } else {
+        const data = await res.json();
+        alert("Erreur: " + (data.error || "Échec"));
+      }
     } catch (err) {
       alert("Erreur: " + err.message);
     }
@@ -272,7 +422,7 @@ export default function Dashboard() {
     : products;
 
   if (loading) {
-    return <div className="loading">⏳ Chargement...</div>;
+    return <div className="loading"><FiClock style={{ marginRight: 8 }} /> Chargement...</div>;
   }
 
   return (
@@ -280,27 +430,27 @@ export default function Dashboard() {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <span>🥤</span> JusTogo Admin
+          <FiPackage /> <span className="nav-label">JusTogo Admin</span>
         </div>
         <nav>
           <button className={tab === "dashboard" ? "active" : ""} onClick={() => setTab("dashboard")}>
-            📊 Dashboard
+            <FiBarChart2 /> <span className="nav-label">Dashboard</span>
           </button>
           <button className={tab === "orders" ? "active" : ""} onClick={() => setTab("orders")}>
-            📦 Commandes <span className="nav-badge">{orders.filter(o => o.status === 'pending').length}</span>
+            <FiPackage /> <span className="nav-label">Commandes</span> <span className="nav-badge">{orders.filter(o => o.status === 'pending').length}</span>
           </button>
           <button className={tab === "products" ? "active" : ""} onClick={() => setTab("products")}>
-            🧃 Produits
+            <FiBox /> <span className="nav-label">Produits</span>
           </button>
           <button className={tab === "zones" ? "active" : ""} onClick={() => setTab("zones")}>
-            🚚 Zones
+            <FiTruck /> <span className="nav-label">Zones</span>
           </button>
           <button className={tab === "users" ? "active" : ""} onClick={() => setTab("users")}>
-            👥 Utilisateurs
+            <FiUsers /> <span className="nav-label">Utilisateurs</span>
           </button>
         </nav>
         <div className="sidebar-footer">
-          <button onClick={logout}>🚪 Déconnexion</button>
+          <button onClick={logout}><FiLogOut /> <span className="nav-label">Déconnexion</span></button>
         </div>
       </aside>
 
@@ -308,11 +458,11 @@ export default function Dashboard() {
       <main className="main">
         <header>
           <h1>
-            {tab === "dashboard" && "📊 Tableau de bord"}
-            {tab === "orders" && "📦 Gestion des commandes"}
-            {tab === "products" && "🧃 Gestion des produits"}
-            {tab === "zones" && "🚚 Zones de livraison"}
-            {tab === "users" && "👥 Utilisateurs"}
+            {tab === "dashboard" && <><FiBarChart2 style={{ marginRight: 8 }} /> Tableau de bord</>}
+            {tab === "orders" && <><FiPackage style={{ marginRight: 8 }} /> Gestion des commandes</>}
+            {tab === "products" && <><FiBox style={{ marginRight: 8 }} /> Gestion des produits</>}
+            {tab === "zones" && <><FiTruck style={{ marginRight: 8 }} /> Zones de livraison</>}
+            {tab === "users" && <><FiUsers style={{ marginRight: 8 }} /> Utilisateurs</>}
           </h1>
         </header>
 
@@ -320,45 +470,112 @@ export default function Dashboard() {
           {/* Dashboard */}
           {tab === "dashboard" && stats && (
             <>
+              {/* Ligne 1 : stats principales */}
               <div className="stats-grid">
                 <div className="stat-card blue">
-                  <span className="stat-icon">📦</span>
+                  <span className="stat-icon"><FiPackage /></span>
                   <div>
                     <strong>{stats.total_orders || 0}</strong>
                     <span>Total Commandes</span>
                   </div>
                 </div>
                 <div className="stat-card green">
-                  <span className="stat-icon">💰</span>
+                  <span className="stat-icon"><FiDollarSign /></span>
                   <div>
                     <strong>{(stats.total_revenue || 0).toLocaleString()} F</strong>
                     <span>Revenu Total</span>
                   </div>
                 </div>
                 <div className="stat-card orange">
-                  <span className="stat-icon">⏳</span>
+                  <span className="stat-icon"><FiClock /></span>
                   <div>
                     <strong>{stats.pending || 0}</strong>
                     <span>En attente</span>
                   </div>
                 </div>
                 <div className="stat-card purple">
-                  <span className="stat-icon">✅</span>
+                  <span className="stat-icon"><FiCheckCircle /></span>
                   <div>
-                    <strong>{stats.delivered || stats.paid || 0}</strong>
+                    <strong>{stats.delivered || 0}</strong>
                     <span>Livrées</span>
                   </div>
                 </div>
               </div>
 
+              {/* Ligne 2 : stats secondaires */}
+              <div className="stats-grid" style={{ marginTop: 16 }}>
+                <div className="stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+                  <span className="stat-icon"><FiTrendingUp /></span>
+                  <div>
+                    <strong>{(stats.today_revenue || 0).toLocaleString()} F</strong>
+                    <span>Revenu aujourd'hui ({stats.today_orders || 0} cmd)</span>
+                  </div>
+                </div>
+                <div className="stat-card" style={{ borderLeft: '4px solid #6366f1' }}>
+                  <span className="stat-icon"><FiBox /></span>
+                  <div>
+                    <strong>{stats.active_products || 0} / {stats.total_products || 0}</strong>
+                    <span>Produits actifs</span>
+                  </div>
+                </div>
+                <div className="stat-card" style={{ borderLeft: '4px solid #0ea5e9' }}>
+                  <span className="stat-icon"><FiUsers /></span>
+                  <div>
+                    <strong>{stats.active_users || 0} / {stats.total_users || 0}</strong>
+                    <span>Utilisateurs actifs</span>
+                  </div>
+                </div>
+                <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+                  <span className="stat-icon"><FiXCircle /></span>
+                  <div>
+                    <strong>{stats.cancelled || 0}</strong>
+                    <span>Annulées</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ligne 3 : Dernières commandes + Top produits */}
               <div className="quick-stats">
                 <div className="quick-card">
-                  <h3>Dernières commandes</h3>
-                  {orders.slice(0, 5).map(order => (
+                  <h3><FiShoppingBag style={{ marginRight: 6 }} /> Dernières commandes</h3>
+                  {(stats.recent_orders || []).length === 0 && (
+                    <p className="no-variants">Aucune commande pour le moment</p>
+                  )}
+                  {(stats.recent_orders || []).map(order => (
                     <div key={order.id} className="quick-item">
-                      <span>#{order.id?.slice(0, 8)}</span>
-                      <span style={{ color: statusColors[order.status] }}>{statusLabels[order.status]}</span>
-                      <strong>{order.total_xof?.toLocaleString()} F</strong>
+                      <span className="quick-id">#{String(order.id).slice(0, 8)}</span>
+                      <span className="quick-customer">{order.customer_name || order.phone || '—'}</span>
+                      <span style={{ color: statusColors[order.status], fontWeight: 600, fontSize: 12 }}>
+                        {statusLabels[order.status] || order.status}
+                      </span>
+                      <strong>{(order.total_xof || 0).toLocaleString()} F</strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="quick-card">
+                  <h3><FiTrendingUp style={{ marginRight: 6 }} /> Produits les plus vendus</h3>
+                  {(stats.top_products || []).length === 0 && (
+                    <p className="no-variants">Aucune vente pour le moment</p>
+                  )}
+                  {(stats.top_products || []).map((prod, i) => (
+                    <div key={i} className="quick-item">
+                      <span style={{ fontWeight: 600 }}>#{i + 1}</span>
+                      <span style={{ flex: 1 }}>{prod.name}</span>
+                      <strong>{prod.total_sold} vendus</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Zones actives */}
+              <div className="quick-stats" style={{ marginTop: 8 }}>
+                <div className="quick-card">
+                  <h3><FiTruck style={{ marginRight: 6 }} /> Zones de livraison actives : {stats.total_zones || 0}</h3>
+                  {zones.filter(z => z.active !== false).slice(0, 6).map(z => (
+                    <div key={z.id} className="quick-item">
+                      <span><FiMapPin style={{ marginRight: 4 }} /> {z.zone}</span>
+                      <strong>{z.fee_xof?.toLocaleString()} F</strong>
                     </div>
                   ))}
                 </div>
@@ -398,10 +615,10 @@ export default function Dashboard() {
                       </div>
                       <div className="order-body">
                         <div className="order-info">
-                          <p><strong>💰 {order.total_xof?.toLocaleString()} FCFA</strong></p>
-                          <p>📍 {order.address}</p>
-                          <p>📱 {order.phone}</p>
-                          <p>📅 {new Date(order.created_at).toLocaleString('fr-FR')}</p>
+                          <p><strong><FiDollarSign style={{ marginRight: 6 }} />{order.total_xof?.toLocaleString()} FCFA</strong></p>
+                          <p><FiMapPin style={{ marginRight: 6 }} />{order.address}</p>
+                          <p><FiPhone style={{ marginRight: 6 }} />{order.phone}</p>
+                          <p><FiCalendar style={{ marginRight: 6 }} />{new Date(order.created_at).toLocaleString('fr-FR')}</p>
                         </div>
                       </div>
                       <div className="order-actions">
@@ -416,7 +633,7 @@ export default function Dashboard() {
                           <option value="delivered">Livrée</option>
                           <option value="cancelled">Annulée</option>
                         </select>
-                        <button className="btn-delete" onClick={() => deleteOrder(order.id)}>🗑️</button>
+                        <button className="btn-delete" onClick={() => deleteOrder(order.id)}><FiTrash2 /></button>
                       </div>
                     </div>
                   ))
@@ -429,8 +646,9 @@ export default function Dashboard() {
           {tab === "products" && (
             <div className="products-section">
               <div className="forms-row">
+                {/* Formulaire création produit */}
                 <form className="form-card" onSubmit={createProduct}>
-                  <h3>➕ Nouveau produit</h3>
+                  <h3><FiPlusCircle style={{ marginRight: 6 }} /> Nouveau produit</h3>
                   <input
                     type="text"
                     placeholder="Nom du produit"
@@ -453,21 +671,39 @@ export default function Dashboard() {
                     <option value="Jus Traditionnel">Jus Traditionnel</option>
                     <option value="Jus Naturel">Jus Naturel</option>
                     <option value="Boisson Protéinée">Boisson Protéinée</option>
+                    <option value="Boisson Énergétique">Boisson Énergétique</option>
                     <option value="Produits Laitiers">Produits Laitiers</option>
                     <option value="Smoothie">Smoothie</option>
                     <option value="Detox">Detox</option>
                   </select>
-                  <input
-                    type="text"
-                    placeholder="URL de l'image"
-                    value={newProduct.image_url}
-                    onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
-                  />
+                  <label className="file-upload-label">
+                    <FiUpload style={{ marginRight: 6 }} />
+                    {newProductImage ? newProductImage.name : "Choisir une image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setNewProductImage(file);
+                          setNewProductPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                  </label>
+                  {newProductPreview && (
+                    <div className="image-preview">
+                      <img src={newProductPreview} alt="Aperçu" />
+                      <button type="button" className="btn-sm-delete" onClick={() => { setNewProductImage(null); setNewProductPreview(null); }}><FiX /></button>
+                    </div>
+                  )}
                   <button type="submit" className="btn-primary">Créer le produit</button>
                 </form>
 
+                {/* Formulaire création variante */}
                 <form className="form-card" onSubmit={createVariant}>
-                  <h3>📦 Nouvelle variante</h3>
+                  <h3><FiPackage style={{ marginRight: 6 }} /> Nouvelle variante</h3>
                   <select
                     value={newVariant.product_id}
                     onChange={(e) => setNewVariant({ ...newVariant, product_id: e.target.value })}
@@ -482,6 +718,7 @@ export default function Dashboard() {
                     value={newVariant.size_label}
                     onChange={(e) => setNewVariant({ ...newVariant, size_label: e.target.value })}
                   >
+                    <option value="25 cl">25 cl</option>
                     <option value="33 cl">33 cl</option>
                     <option value="50 cl">50 cl</option>
                     <option value="1 L">1 L</option>
@@ -505,12 +742,110 @@ export default function Dashboard() {
                 </form>
               </div>
 
+              {/* Modal d'édition produit */}
+              {editingProduct && (
+                <div className="modal-overlay" onClick={() => { setEditingProduct(null); setEditProductImage(null); setEditProductPreview(null); }}>
+                  <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <button className="modal-close" onClick={() => { setEditingProduct(null); setEditProductImage(null); setEditProductPreview(null); }}><FiX /></button>
+                    <form onSubmit={saveEditProduct} className="form-card" style={{ boxShadow: 'none', margin: 0 }}>
+                      <h3><FiEdit2 style={{ marginRight: 6 }} /> Modifier : {editingProduct.name}</h3>
+                      <input
+                        type="text"
+                        placeholder="Nom"
+                        value={editingProduct.name}
+                        onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                        required
+                      />
+                      <textarea
+                        placeholder="Description"
+                        value={editingProduct.description || ""}
+                        onChange={e => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                        rows={2}
+                      />
+                      <select
+                        value={editingProduct.category || ""}
+                        onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                      >
+                        <option value="">Catégorie</option>
+                        <option value="Jus Traditionnel">Jus Traditionnel</option>
+                        <option value="Jus Naturel">Jus Naturel</option>
+                        <option value="Boisson Protéinée">Boisson Protéinée</option>
+                        <option value="Boisson Énergétique">Boisson Énergétique</option>
+                        <option value="Produits Laitiers">Produits Laitiers</option>
+                        <option value="Smoothie">Smoothie</option>
+                        <option value="Detox">Detox</option>
+                      </select>
+                      <label className="file-upload-label">
+                        <FiUpload style={{ marginRight: 6 }} />
+                        {editProductImage ? editProductImage.name : "Changer l'image"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setEditProductImage(file);
+                              setEditProductPreview(URL.createObjectURL(file));
+                            }
+                          }}
+                        />
+                      </label>
+                      {editProductPreview && (
+                        <div className="image-preview">
+                          <img src={editProductPreview} alt="Aperçu" />
+                        </div>
+                      )}
+                      <button type="submit" className="btn-primary">Sauvegarder</button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal d'édition variante */}
+              {editingVariant && (
+                <div className="modal-overlay" onClick={() => setEditingVariant(null)}>
+                  <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <button className="modal-close" onClick={() => setEditingVariant(null)}><FiX /></button>
+                    <form onSubmit={saveEditVariant} className="form-card" style={{ boxShadow: 'none', margin: 0 }}>
+                      <h3><FiEdit2 style={{ marginRight: 6 }} /> Modifier la variante</h3>
+                      <select
+                        value={editingVariant.size_label}
+                        onChange={e => setEditingVariant({ ...editingVariant, size_label: e.target.value })}
+                      >
+                        <option value="25 cl">25 cl</option>
+                        <option value="33 cl">33 cl</option>
+                        <option value="50 cl">50 cl</option>
+                        <option value="1 L">1 L</option>
+                        <option value="1.5 L">1.5 L</option>
+                      </select>
+                      <input
+                        type="number"
+                        placeholder="Prix (FCFA)"
+                        value={editingVariant.price_xof}
+                        onChange={e => setEditingVariant({ ...editingVariant, price_xof: e.target.value })}
+                        required
+                      />
+                      <input
+                        type="number"
+                        placeholder="Stock"
+                        value={editingVariant.stock}
+                        onChange={e => setEditingVariant({ ...editingVariant, stock: e.target.value })}
+                        required
+                      />
+                      <button type="submit" className="btn-primary">Sauvegarder</button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Liste des produits */}
               <div className="products-list-section">
                 <div className="list-header">
                   <h3>Liste des produits ({products.length})</h3>
                   <input
                     type="text"
-                    placeholder="🔍 Rechercher..."
+                    placeholder="Rechercher..."
                     value={searchProduct}
                     onChange={(e) => setSearchProduct(e.target.value)}
                     className="search-input"
@@ -521,6 +856,7 @@ export default function Dashboard() {
                   {filteredProducts.map(p => (
                     <div key={p.id} className={`product-item ${p.active === false ? 'inactive' : ''}`}>
                       <div className="product-img" style={{ backgroundImage: p.image_url ? `url(${p.image_url})` : 'none' }}>
+                        {!p.image_url && <span className="no-img-label"><FiImage /> Pas d'image</span>}
                         {p.active === false && <span className="inactive-badge">Inactif</span>}
                       </div>
                       <div className="product-details">
@@ -531,18 +867,23 @@ export default function Dashboard() {
                             <div key={v.id} className="variant-item">
                               <span>{v.size_label} - {v.price_xof?.toLocaleString()} F</span>
                               <span>Stock: {v.stock}</span>
-                              <button className="btn-sm-delete" onClick={() => deleteVariant(v.id)}>✕</button>
+                              <button className="btn-sm-edit" title="Modifier" onClick={() => startEditVariant(v)}><FiEdit2 /></button>
+                              <button className="btn-sm-delete" title="Supprimer" onClick={() => deleteVariant(v.id)}><FiX /></button>
                             </div>
                           ))}
+                          {(!p.variants || p.variants.length === 0) && (
+                            <span className="no-variants">Aucune variante</span>
+                          )}
                         </div>
                         <div className="product-actions">
-                          <button 
+                          <button
                             className={p.active !== false ? 'btn-toggle active' : 'btn-toggle'}
                             onClick={() => toggleProductActive(p.id, p.active !== false)}
                           >
-                            {p.active !== false ? '✓ Actif' : '✗ Inactif'}
+                            {p.active !== false ? <><FiCheckCircle style={{ marginRight:6 }} />Actif</> : <><FiX style={{ marginRight:6 }} />Inactif</>}
                           </button>
-                          <button className="btn-delete" onClick={() => deleteProduct(p.id)}>🗑️</button>
+                          <button className="btn-edit" onClick={() => startEditProduct(p)}><FiEdit2 style={{ marginRight: 4 }} /> Modifier</button>
+                          <button className="btn-delete" onClick={() => deleteProduct(p.id)}><FiTrash2 /></button>
                         </div>
                       </div>
                     </div>
@@ -588,7 +929,7 @@ export default function Dashboard() {
                           <strong>{z.zone || z.name}</strong>
                           <span>{z.fee_xof?.toLocaleString()} FCFA</span>
                         </div>
-                        <button className="btn-delete" onClick={() => deleteZone(z.id)}>🗑️</button>
+                        <button className="btn-delete" onClick={() => deleteZone(z.id)}><FiTrash2 /></button>
                       </div>
                     ))}
                   </div>
@@ -598,22 +939,79 @@ export default function Dashboard() {
           )}
 
           {/* Users */}
-          {tab === "users" && (
+          {tab === "users" && (() => {
+            const activeUsers = users.filter(u => u.active !== false);
+            const suspendedUsers = users.filter(u => u.active === false);
+            const filteredUsers = users.filter(u => {
+              const q = searchUser.toLowerCase();
+              const matchesSearch = !q || 
+                u.full_name?.toLowerCase().includes(q) ||
+                u.phone?.toLowerCase().includes(q) ||
+                u.email?.toLowerCase().includes(q);
+              const matchesStatus = userStatusFilter === 'all' ||
+                (userStatusFilter === 'active' && u.active !== false) ||
+                (userStatusFilter === 'suspended' && u.active === false);
+              const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
+              return matchesSearch && matchesStatus && matchesRole;
+            });
+            const roles = [...new Set(users.map(u => u.role).filter(Boolean))];
+
+            return (
             <div className="users-section">
               <div className="users-stats">
                 <div className="user-stat-card">
-                  <span>👥</span>
+                  <FiUsers style={{ marginRight: 8 }} />
                   <div>
                     <strong>{users.length}</strong>
-                    <span>Total utilisateurs</span>
+                    <span>Total</span>
+                  </div>
+                </div>
+                <div className="user-stat-card" style={{ borderLeft: '4px solid #27ae60' }}>
+                  <FiCheckCircle style={{ marginRight: 8, color: '#27ae60' }} />
+                  <div>
+                    <strong>{activeUsers.length}</strong>
+                    <span>Actifs</span>
+                  </div>
+                </div>
+                <div className="user-stat-card" style={{ borderLeft: '4px solid #e74c3c' }}>
+                  <FiX style={{ marginRight: 8, color: '#e74c3c' }} />
+                  <div>
+                    <strong>{suspendedUsers.length}</strong>
+                    <span>Suspendus</span>
                   </div>
                 </div>
               </div>
 
+              {/* Barre de recherche + filtres */}
+              <div className="filters-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: '1 1 220px' }}>
+                  <FiSearch style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                  <input
+                    type="text"
+                    placeholder="Rechercher par nom, téléphone, email..."
+                    value={searchUser}
+                    onChange={e => setSearchUser(e.target.value)}
+                    className="search-input"
+                    style={{ paddingLeft: 34, width: '100%' }}
+                  />
+                </div>
+                <select value={userStatusFilter} onChange={e => setUserStatusFilter(e.target.value)}>
+                  <option value="all">Tous les statuts ({users.length})</option>
+                  <option value="active">Actifs ({activeUsers.length})</option>
+                  <option value="suspended">Suspendus ({suspendedUsers.length})</option>
+                </select>
+                <select value={userRoleFilter} onChange={e => setUserRoleFilter(e.target.value)}>
+                  <option value="all">Tous les rôles</option>
+                  {roles.map(r => (
+                    <option key={r} value={r}>{r} ({users.filter(u => u.role === r).length})</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="users-list">
-                <h3>Liste des utilisateurs</h3>
-                {users.length === 0 ? (
-                  <p className="empty">Aucun utilisateur inscrit</p>
+                <h3>Liste des utilisateurs ({filteredUsers.length}{filteredUsers.length !== users.length ? ` / ${users.length}` : ''})</h3>
+                {filteredUsers.length === 0 ? (
+                  <p className="empty">{searchUser || userStatusFilter !== 'all' || userRoleFilter !== 'all' ? 'Aucun utilisateur ne correspond aux filtres' : 'Aucun utilisateur inscrit'}</p>
                 ) : (
                   <table className="users-table">
                     <thead>
@@ -628,25 +1026,25 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map(user => (
+                      {filteredUsers.map(user => (
                         <tr key={user.id} className={user.active === false ? 'suspended-user' : ''}>
-                          <td>{user.full_name}</td>
-                          <td>{user.phone}</td>
-                          <td>{user.email || '-'}</td>
-                          <td><span className={`role-badge ${user.role}`}>{user.role}</span></td>
-                          <td>
+                          <td data-label="Nom">{user.full_name}</td>
+                          <td data-label="Tél">{user.phone}</td>
+                          <td data-label="Email">{user.email || '-'}</td>
+                          <td data-label="Rôle"><span className={`role-badge ${user.role}`}>{user.role}</span></td>
+                          <td data-label="Statut">
                             <span className={`status-badge ${user.active !== false ? 'active' : 'suspended'}`}>
-                              {user.active !== false ? '✅ Actif' : '❌ Suspendu'}
+                              {user.active !== false ? <><FiCheckCircle style={{ marginRight:6 }} /> Actif</> : <><FiX style={{ marginRight:6 }} /> Suspendu</>}
                             </span>
                           </td>
-                          <td>{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
-                          <td>
+                          <td data-label="Inscrit">{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
+                          <td data-label="">
                             <button 
                               className={user.active !== false ? 'btn-suspend' : 'btn-activate'}
                               onClick={() => toggleUserStatus(user.id, user.active !== false)}
                               title={user.active !== false ? 'Suspendre le compte' : 'Activer le compte'}
                             >
-                              {user.active !== false ? '🚫 Suspendre' : '✅ Activer'}
+                              {user.active !== false ? 'Suspendre' : 'Activer'}
                             </button>
                           </td>
                         </tr>
@@ -656,9 +1054,37 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
         </div>
       </main>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="mobile-bottom-nav">
+        <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
+          <FiBarChart2 />
+          <span>Dashboard</span>
+        </button>
+        <button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>
+          <FiPackage />
+          {orders.filter(o => o.status === 'pending').length > 0 && (
+            <span className="mobile-badge">{orders.filter(o => o.status === 'pending').length}</span>
+          )}
+          <span>Commandes</span>
+        </button>
+        <button className={tab === 'products' ? 'active' : ''} onClick={() => setTab('products')}>
+          <FiBox />
+          <span>Produits</span>
+        </button>
+        <button className={tab === 'zones' ? 'active' : ''} onClick={() => setTab('zones')}>
+          <FiTruck />
+          <span>Zones</span>
+        </button>
+        <button className={tab === 'users' ? 'active' : ''} onClick={() => setTab('users')}>
+          <FiUsers />
+          <span>Users</span>
+        </button>
+      </nav>
     </div>
   );
 }

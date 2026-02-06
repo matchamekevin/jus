@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiPackage, FiMapPin, FiBell, FiPhone } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useApp } from '../context/AppContext';
@@ -32,7 +33,7 @@ export default function Track() {
 
       <main className="track-main">
         <div className="track-hero">
-          <h1>📦 Suivi de Commande</h1>
+          <h1><FiPackage style={{ marginRight: 8 }} /> Suivi de Commande</h1>
           <p>Suivez l'état de votre commande en temps réel</p>
         </div>
 
@@ -47,37 +48,35 @@ export default function Track() {
                 onChange={(e) => setOrderId(e.target.value)}
               />
               <button type="submit" disabled={searching}>
-                {searching ? '⏳' : '🔍'} Rechercher
+                {searching ? 'Recherche...' : 'Rechercher'}
               </button>
             </form>
           </div>
 
           {error && (
             <div className="track-message error">
-              <span>⚠️</span>
               <p>{error}</p>
             </div>
           )}
 
           {/* Message en développement */}
           <div className="dev-notice">
-            <div className="dev-icon">🚧</div>
             <h2>Fonctionnalité en développement</h2>
             <p>Le suivi en temps réel sera bientôt disponible !</p>
 
             <div className="dev-features">
-              <div className="feature">
-                <span>📍</span>
-                <span>Suivi en temps réel</span>
-              </div>
-              <div className="feature">
-                <span>🔔</span>
-                <span>Notifications SMS</span>
-              </div>
-              <div className="feature">
-                <span>📞</span>
-                <span>Contact livreur</span>
-              </div>
+                <div className="feature">
+                  <FiMapPin style={{ marginRight: 8 }} />
+                  <span>Suivi en temps réel</span>
+                </div>
+                <div className="feature">
+                  <FiBell style={{ marginRight: 8 }} />
+                  <span>Notifications SMS</span>
+                </div>
+                <div className="feature">
+                  <FiPhone style={{ marginRight: 8 }} />
+                  <span>Contact livreur</span>
+                </div>
             </div>
           </div>
 
@@ -87,10 +86,10 @@ export default function Track() {
             <p>Contactez-nous directement :</p>
             <div className="contact-buttons">
               <a href="tel:+22896732247" className="contact-btn moov">
-                📱 Moov: 96 73 22 47
+                Moov: 96 73 22 47
               </a>
               <a href="tel:+22870472436" className="contact-btn togocel">
-                📲 Togocel: 70 47 24 36
+                Togocel: 70 47 24 36
               </a>
             </div>
           </div>

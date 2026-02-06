@@ -166,17 +166,7 @@
   transform: scale(1.05);
 }
 
-.featured-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: linear-gradient(135deg, #ffc107, #ff9800);
-  color: #fff;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
+/* Featured badge removed */
 
 .product-info {
   padding: 1.25rem;

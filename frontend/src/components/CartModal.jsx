@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiTrash2 } from 'react-icons/fi';
 import { useApp } from '../context/AppContext';
 import './Modal.css';
 
@@ -68,12 +69,11 @@ export default function CartModal() {
         {step === 'cart' && (
           <>
             <div className="cart-header">
-              <h2>🛒 Mon Panier</h2>
+              <h2>Mon Panier</h2>
             </div>
 
             {cart.length === 0 ? (
               <div className="cart-empty">
-                <span>🛒</span>
                 <p>Votre panier est vide</p>
               </div>
             ) : (
@@ -82,7 +82,7 @@ export default function CartModal() {
                   {cart.map(item => (
                     <div key={item.variant_id} className="cart-item">
                       <img 
-                        src={item.image_url || 'https://via.placeholder.com/60x60?text=🥤'} 
+                        src={item.image_url || 'https://via.placeholder.com/60x60?text=Product'} 
                         alt={item.product_name} 
                       />
                       <div className="cart-item-info">
@@ -98,8 +98,9 @@ export default function CartModal() {
                       <button 
                         className="remove-btn" 
                         onClick={() => removeFromCart(item.variant_id)}
+                        aria-label={`Supprimer ${item.product_name}`}
                       >
-                        🗑️
+                        <FiTrash2 />
                       </button>
                     </div>
                   ))}
@@ -111,7 +112,7 @@ export default function CartModal() {
                     <strong>{cartTotal.toLocaleString()} FCFA</strong>
                   </div>
                   <button className="checkout-btn" onClick={handleCheckout}>
-                    Commander 🚀
+                    Commander
                   </button>
                   <button className="clear-cart-btn" onClick={clearCart}>
                     Vider le panier
@@ -126,14 +127,14 @@ export default function CartModal() {
           <>
             <div className="cart-header">
               <button className="back-btn" onClick={() => setStep('cart')}>← Retour</button>
-              <h2>📍 Livraison</h2>
+              <h2>Livraison</h2>
             </div>
 
             {error && <div className="auth-error">{error}</div>}
 
             <form onSubmit={handleOrder} className="checkout-form">
               <div className="form-group">
-                <label>📱 Téléphone</label>
+                <label>Téléphone</label>
                 <input
                   type="tel"
                   value={form.phone}
@@ -143,7 +144,7 @@ export default function CartModal() {
               </div>
 
               <div className="form-group">
-                <label>📍 Zone de livraison</label>
+                <label>Zone de livraison</label>
                 <select
                   value={form.zoneId}
                   onChange={e => setForm({ ...form, zoneId: e.target.value })}
@@ -159,7 +160,7 @@ export default function CartModal() {
               </div>
 
               <div className="form-group">
-                <label>🏠 Adresse complète</label>
+                <label>Adresse complète</label>
                 <textarea
                   value={form.address}
                   onChange={e => setForm({ ...form, address: e.target.value })}
@@ -185,7 +186,7 @@ export default function CartModal() {
               </div>
 
               <button type="submit" className="confirm-btn" disabled={loading}>
-                {loading ? '⏳ Traitement...' : '✅ Confirmer la commande'}
+                {loading ? 'Traitement...' : 'Confirmer la commande'}
               </button>
             </form>
           </>
@@ -193,13 +194,12 @@ export default function CartModal() {
 
         {step === 'success' && (
           <div className="order-success">
-            <span className="success-icon">🎉</span>
             <h2>Commande confirmée !</h2>
             <p>Merci pour votre commande</p>
             {orderResult && (
               <div className="order-ref">
                 <span>N° de commande</span>
-                <strong>#{orderResult.orderId?.slice(0, 8)}</strong>
+                <strong>#{orderResult.order_id?.slice(0, 8)}</strong>
               </div>
             )}
             <p className="success-message">

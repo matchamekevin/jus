@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiUser, FiPhone } from 'react-icons/fi';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
@@ -49,8 +50,10 @@ export default function Auth() {
     <div className="auth-page">
       <div className="auth-container">
         <Link to="/" className="auth-logo">
-          <span className="logo-icon">🥤</span>
-          <span className="logo-text">JusTogo</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <FiUser />
+            <span className="logo-text">JusTogo</span>
+          </span>
         </Link>
 
         <div className="auth-welcome">
@@ -76,11 +79,11 @@ export default function Auth() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="auth-error">⚠️ {error}</div>}
+          {error && <div className="auth-error">{error}</div>}
 
           {mode === 'register' && (
             <div className="form-field">
-              <label>👤 Nom complet</label>
+              <label>Nom complet</label>
               <input
                 type="text"
                 name="full_name"
@@ -92,8 +95,8 @@ export default function Auth() {
             </div>
           )}
 
-          <div className="form-field">
-            <label>📞 Numéro de téléphone</label>
+            <div className="form-field">
+              <label><FiPhone style={{ marginRight: 6 }} /> Numéro de téléphone</label>
             <input
               type="tel"
               name="phone"
@@ -106,7 +109,7 @@ export default function Auth() {
 
           {mode === 'register' && (
             <div className="form-field">
-              <label>✉️ Email (optionnel)</label>
+              <label>Email (optionnel)</label>
               <input
                 type="email"
                 name="email"
@@ -118,7 +121,7 @@ export default function Auth() {
           )}
 
           <div className="form-field">
-            <label>🔒 Mot de passe</label>
+            <label>Mot de passe</label>
             <input
               type="password"
               name="password"
@@ -131,7 +134,7 @@ export default function Auth() {
           </div>
 
           <button type="submit" className="auth-submit btn-primary" disabled={loading}>
-            {loading ? '⏳ Chargement...' : mode === 'login' ? '🚀 Se connecter' : '✨ Créer mon compte'}
+            {loading ? 'Chargement...' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
           </button>
         </form>
 
@@ -145,7 +148,7 @@ export default function Auth() {
 
         <div className="auth-help">
           <p>Besoin d'aide ? Appelez-nous :</p>
-          <p><a href="tel:+22896732247">📞 96 73 22 47</a></p>
+          <p><a href="tel:+22896732247">96 73 22 47</a></p>
         </div>
       </div>
     </div>

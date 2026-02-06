@@ -56,10 +56,10 @@ export default function AccountModal() {
         <button className="modal-close" onClick={closeModal}>✕</button>
 
         <div className="account-header">
-          <div className="account-avatar">👤</div>
+          <div className="account-avatar">{user.full_name?.charAt(0).toUpperCase() || ''}</div>
           <h2>{user.full_name}</h2>
-          <p>📱 {user.phone}</p>
-          {user.email && <p>✉️ {user.email}</p>}
+          <p>{user.phone}</p>
+          {user.email && <p>{user.email}</p>}
         </div>
 
         <div className="account-tabs">
@@ -67,13 +67,13 @@ export default function AccountModal() {
             className={activeTab === 'profile' ? 'active' : ''}
             onClick={() => setActiveTab('profile')}
           >
-            👤 Profil
+            Profil
           </button>
           <button 
             className={activeTab === 'orders' ? 'active' : ''}
             onClick={() => setActiveTab('orders')}
           >
-            📦 Commandes
+            Commandes
           </button>
         </div>
 
@@ -109,7 +109,7 @@ export default function AccountModal() {
               </div>
 
               <button className="logout-btn" onClick={handleLogout}>
-                🚪 Se déconnecter
+                Se déconnecter
               </button>
             </div>
           )}
@@ -117,10 +117,9 @@ export default function AccountModal() {
           {activeTab === 'orders' && (
             <div className="orders-section">
               {loading ? (
-                <div className="loading-orders">⏳ Chargement des commandes...</div>
+                <div className="loading-orders">Chargement des commandes...</div>
               ) : orders.length === 0 ? (
                 <div className="no-orders">
-                  <span>📭</span>
                   <p>Aucune commande pour l'instant</p>
                 </div>
               ) : (
